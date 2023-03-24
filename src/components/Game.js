@@ -29,6 +29,8 @@ const Game = ({ numAttempts = 3 }) => {
   // const [allSongs, setAllSongs] = useState([])
   // const [allArtists, setAllArtists] = useState([])
 
+  const history = useHistory()
+
   // Game logic
   useEffect(() => {
     setTimeout(() => {
@@ -217,6 +219,10 @@ const Game = ({ numAttempts = 3 }) => {
       maxWidth="lg"
       sx={{ height: "100%", padding: 0, overflow: "hidden" }}
     >
+      <Button
+        sx={{ position: "fixed", top: 0, left: 0 }}
+        onClick={() => history.push('/')}
+      >Reset Game</Button>
       <Box
         sx={{
           display: "flex",
