@@ -215,6 +215,14 @@ const Home = () => {
   useEffect(() => {
     setAuthLoading(true);
 
+    if (localStorage.getItem("gameSettings")) {
+      setArtistPerChoice(JSON.parse(localStorage.getItem("gameSettings")).numArtists);
+      setSongCount(JSON.parse(localStorage.getItem("gameSettings")).numSongs);
+      setSelectedGenre(JSON.parse(localStorage.getItem("gameSettings")).selectedGenre);
+      setAttempts(JSON.parse(localStorage.getItem("gameSettings")).numAttempts);
+      setExplicit(JSON.parse(localStorage.getItem("gameSettings")).explicit);
+    }
+
     const storedTokenString = localStorage.getItem(TOKEN_KEY);
     if (storedTokenString) {
       const storedToken = JSON.parse(storedTokenString);
@@ -262,11 +270,18 @@ const Home = () => {
         </Typography>
         <Typography>To start the game either: </Typography>
         <Typography>
-          1. Click 'Start Game' button and play with default options{" "}
+          1. Click 'Start Game' button and play with default options or selected settings{" "}
         </Typography>
         <Typography gutterBottom>
           2. Change the options for the game first
         </Typography>
+        <Button style={{ fontSize: "20px" }} onClick={() => {
+          setArtistPerChoice(2);
+          setSongCount(1);
+          setSelectedGenre("pop");
+          setExplicit(false);
+        }}>Reset Settings</Button>
+
         <Rules />
 
 
@@ -410,7 +425,6 @@ const Home = () => {
         >
           Start Game!
         </Button>
-
         <Button
           style={{ fontSize: "20px" }}
           onClick={() => {
