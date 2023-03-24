@@ -31,7 +31,8 @@ const Home = () => {
   const [songs, setSongs] = useState([]);
   const [explicit, setExplicit] = useState(false);
   const [artists, setArtists] = useState([]);
-  const [error, setError] = useState(false);
+  const [errorGenre, setErrorGenre] = useState(false);
+  const [errorSettings, setErrorSettings] = useState(false)
 
   const history = useHistory();
 
@@ -46,7 +47,13 @@ const Home = () => {
   };
 
   const searchGenre = async () => {
-    setError(true);
+
+    if (artistPerChoice < songCount) {
+      setErrorSettings(true)
+      return
+    }
+
+    // setError(true);
     console.log(
       "songs ",
       songCount,
@@ -75,19 +82,12 @@ const Home = () => {
       },
     });
 
-    console.log(
-      "A ",
-      response.artists.items,
-      " D ",
-      response.tracks.items,
-      " error ",
-      error
-    );
+
     if (
       response.artists.items.length === 0 ||
       response.tracks.items.length === 0
     ) {
-      setError(true);
+      setErrorGenre(true);
       console.log("ASDFASDFASDFASDF");
       return;
     }
@@ -160,6 +160,10 @@ const Home = () => {
       })
     );
 
+
+    if (errorSettings)
+      return
+
     console.log("I'm here with ", songsToAdd);
 
     history.push("play");
@@ -170,6 +174,8 @@ const Home = () => {
     songCount,
     artistPerChoice
   ) => {
+
+
     localStorage.setItem(
       "gameSettings",
       JSON.stringify({
@@ -235,7 +241,7 @@ const Home = () => {
 
   return (
     <Container
-      maxWidth="100%"
+      maxWidth="lg"
       sx={{ height: "100%", padding: 0, overflow: "hidden" }}
     >
       <Box
@@ -280,7 +286,10 @@ const Home = () => {
             id="genre-choices"
             label="Genre"
             value={selectedGenre}
-            onChange={(event) => setSelectedGenre(event.target.value)}
+            onChange={(event) => {
+              setSelectedGenre(event.target.value);
+              if (errorGenre) setErrorGenre(false);
+            }}
           >
             <option value="" />
             {genres.map((genre) => (
@@ -290,14 +299,16 @@ const Home = () => {
             ))}
           </Select>
           <Button
-            onClick={() =>
+            onClick={() => {
               setSelectedGenre(
                 genres[Math.floor(Math.random() * genres.length)]
-              )
-            }
+              );
+              if (errorGenre) setErrorGenre(false)
+            }}
           >
             Pick Random Genre
           </Button>
+          {errorGenre && <Typography variant="h5" color="error">The Genre has no songs/artists please choice another</Typography>}
         </FormControl>
         <FormControl
           variant="outlined"
@@ -310,12 +321,16 @@ const Home = () => {
             id="number-of-songs"
             native
             value={songCount}
-            onChange={(event) => setSongCount(event.target.value)}
+            onChange={(event) => {
+              setSongCount(event.target.value);
+              if (errorSettings) setErrorSettings(false);
+            }}
           >
             <option value="1">1</option>
             <option value="2">2</option>
             <option value="3">3</option>
           </Select>
+          {errorSettings && <Typography variant="h5" color="error">To keep the game fun set artists to be equal or greater than songs</Typography>}
         </FormControl>
         <FormControl
           variant="outlined"
@@ -328,7 +343,10 @@ const Home = () => {
             label="Artists"
             id="number-of-artists"
             value={artistPerChoice}
-            onChange={(event) => setArtistPerChoice(event.target.value)}
+            onChange={(event) => {
+              setArtistPerChoice(event.target.value)
+              if (errorSettings) setErrorSettings(false);
+            }}
           >
             <option value="2">2</option>
             <option value="3">3</option>
@@ -400,7 +418,6 @@ const Home = () => {
         </Button>
         {/* </Link> */}
         {/* {console.log("numSong ", songCount, " numArtist ", artistPerChoice, " genre ", selectedGenre)} */}
-        {error && <h3>The Genre has no songs/artists please choice another</h3>}
       </Box>
     </Container>
   );
