@@ -115,6 +115,8 @@ const Game = ({ numAttempts = 3 }) => {
           setShowModal(true);
           setIsPlaying(false);
           setShowModal(true)
+          if (isPlaying)
+            currentAudio.pause();
         }
       }
       if (song.artistName == selectedArtist.artistName) {
@@ -129,6 +131,8 @@ const Game = ({ numAttempts = 3 }) => {
         if ((matches + 1) == gameSettings.numSongs) {
           console.log("Winner")
           setIsPlaying(false);
+          if (isPlaying)
+            currentAudio.pause();
           setWon(true)
           setShowModal(true)
 
@@ -150,6 +154,8 @@ const Game = ({ numAttempts = 3 }) => {
         if (attempts - 1 === 0) {
           setShowModal(true);
           setIsPlaying(false);
+          if (isPlaying)
+            currentAudio.pause();
           setShowModal(true)
         }
       }
@@ -167,6 +173,8 @@ const Game = ({ numAttempts = 3 }) => {
         if ((matches + 1) == gameSettings.numSongs) {
           console.log("Winner")
           setIsPlaying(false);
+          if (isPlaying)
+            currentAudio.pause();
           setWon(true)
           setShowModal(true)
 
@@ -298,7 +306,6 @@ const Game = ({ numAttempts = 3 }) => {
           </Grid>
         </Grid>
         {showModal && (
-          currentAudio.pause(),
           < Modal
             won={won}
             attempts={attempts}
