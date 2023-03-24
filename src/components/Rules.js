@@ -24,7 +24,11 @@ export default function Rules() {
 
   return (
     <div>
-      <Button color="inherit" onClick={handleClickOpen}>
+      <Button
+        color="inherit"
+        style={{ fontSize: "20px" }}
+        onClick={handleClickOpen}
+      >
         How to Play
       </Button>
       <Dialog
@@ -41,7 +45,7 @@ export default function Rules() {
             Match each song to the correct artist. You win the round when all
             songs are matched to an artist. Each song has a preview you can
             play. The game is over when you run out of attempts or you match 50
-            songs. 
+            songs.
           </DialogContentText>
         </DialogContent>
         <DialogActions>

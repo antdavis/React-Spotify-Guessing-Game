@@ -261,7 +261,7 @@ const Home = () => {
           1. Click 'Start Game' button and play with default options{" "}
         </Typography>
         <Typography gutterBottom>
-          2. Change the options for the game first.{" "}
+          2. Change the options for the game first
         </Typography>
         <Rules />
 
