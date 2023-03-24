@@ -48,6 +48,7 @@ const Home = () => {
 
   const searchGenre = async () => {
 
+
     if (artistPerChoice < songCount) {
       setErrorSettings(true)
       return
@@ -128,11 +129,13 @@ const Home = () => {
 
     response.artists.items.forEach((artist) => {
       artistToGetById = artistToGetById.filter((id) => id !== artist.id);
-
-      artistToAdd.push({
-        artistName: artist.name,
-        artistImg: artist.images[2].url,
-      });
+      console.log(artist.name, artist.images)
+      if (artist.images.length > 0) {
+        artistToAdd.push({
+          artistName: artist.name,
+          artistImg: artist.images[2].url,
+        });
+      }
     });
     if (artistToGetById.length > 0) {
       const artistResponse = await fetchFromSpotify({
@@ -145,11 +148,12 @@ const Home = () => {
 
       artistResponse.artists.forEach((artist) => {
         artistToGetById = artistToGetById.filter((id) => id !== artist.id);
-
-        artistToAdd.push({
-          artistName: artist.name,
-          artistImg: artist.images[2].url,
-        });
+        if (artist.images.length > 0) {
+          artistToAdd.push({
+            artistName: artist.name,
+            artistImg: artist.images[2].url,
+          });
+        }
       });
     }
     localStorage.setItem(
