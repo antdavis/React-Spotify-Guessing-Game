@@ -1,58 +1,14 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useReducer } from "react";
+import { useHistory } from "react-router";
+import { Box, Button, Container, Grid, Typography } from "@material-ui/core";
+import _ from "lodash";
+import FavoriteIcon from "@material-ui/icons/Favorite";
+import PlayArrowIcon from "@material-ui/icons/PlayArrow";
+import PauseIcon from "@material-ui/icons/Pause";
+
+import Modal from "./Modal";
 
 const Game = ({ numAttempts = 3 }) => {
-  /*   let artists = [
-    {
-      artistName: "Artist 1",
-      artistImg: "https://via.placeholder.com/150",
-    },
-    {
-      artistName: "Artist 2",
-      artistImg: "https://via.placeholder.com/150",
-    },
-    {
-      artistName: "Artist 3",
-      artistImg: "https://via.placeholder.com/150",
-    },
-    {
-      artistName: "Artist 4",
-      artistImg: "https://via.placeholder.com/150",
-    },
-  ]; */
-
-  /* let songs = [
-    {
-      trackName: "Song 1",
-      artistName: "Artist 1",
-      previewURL:
-        "https://p.scdn.co/mp3-preview/5f6f6d2b88273e6cfc8ad8a76a8c02172a80afbd?cid=74f434552d40467782bc1bc64b12b2e9",
-    },
-    {
-      trackName: "Song 2",
-      artistName: "Artist 2",
-      previewURL:
-        "https://p.scdn.co/mp3-preview/d5e0f6280240fb57f91c73bd0c596c8ea56348d6?cid=74f434552d40467782bc1bc64b12b2e9",
-    },
-    {
-      trackName: "Song 3",
-      artistName: "Artist 3",
-      previewURL:
-        "https://p.scdn.co/mp3-preview/7b092bad4834dd01a0c84ab0733badb0af60e24b?cid=74f434552d40467782bc1bc64b12b2e9",
-    },
-    {
-      trackName: "Song 4",
-      artistName: "Artist 4",
-      previewURL:
-        "https://p.scdn.co/mp3-preview/7b092bad4834dd01a0c84ab0733badb0af60e24b?cid=74f434552d40467782bc1bc64b12b2e9",
-    },
-  ]; */
-
-  /*   // Get random 'numArtists' artists
-  const shuffledArtists = artists.sort(() => 0.5 - Math.random()); // Shuffle the array
-  const selectedArtists = shuffledArtists.slice(0, numArtists); // Get a new array with 'numArtists' items
-  // Get random 'numSongs' songs
-  const shuffledSongs = songs.sort(() => 0.5 - Math.random()); // Shuffle the array
-  const selectedSongs = shuffledSongs.slice(0, numSongs); // Get a new array with 'numArtists' items */
   // Game state
   const [artists, setArtists] = useState([]);
   const [songs, setSongs] = useState([]);
@@ -61,109 +17,315 @@ const Game = ({ numAttempts = 3 }) => {
   const [selectedArtist, setSelectedArtist] = useState(false);
   const [attempts, setAttempts] = useState(numAttempts);
   const [score, setScore] = useState(0);
+  const [currentAudio, setCurrentAudio] = useState(null);
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [won, setWon] = useState(false);
+  const [matches, setMatches] = useState(0); //should be set to NumOfSongs and decremented for every correct match and won set to true at 0
+  const [gameOver, setGameOver] = useState(false); //not sure if needs to be state, but gameOver is set to true if the remaining songs from localStorage is less than songs to play game
+  const [solution, setSolution] = useState(""); //again this probably doesn't need to be state should probalby just pass in the songs list for the round
+  const [ignored, forceUpdate] = useReducer((x) => x + 1, 0);
+  // const [count, setCount] = useState(0)
+  // const [allSongs, setAllSongs] = useState([])
+  // const [allArtists, setAllArtists] = useState([])
+
+  const history = useHistory()
 
   // Game logic
   useEffect(() => {
-    const spotifyData = localStorage.getItem("apiResults");
-    const settings = localStorage.getItem("gameSettings");
-    setArtists(JSON.parse(spotifyData).artists);
-    setSongs(JSON.parse(spotifyData).songs);
-    setGameSettings(JSON.parse(settings));
+    setTimeout(() => {
+      const settings = JSON.parse(localStorage.getItem("gameSettings"));
+
+      setAttempts(settings.numAttempts);
+      setGameSettings(settings);
+      setShowModal(false);
+      // setMatches(settings.numSongs)
+      console.log(
+        "Page Loading",
+        settings,
+        settings.numArtists,
+        settings.numSongs
+      );
+
+      // if (localStorage.getItem("apiResults") !== "null")
+      populateSongsArtists(settings.numArtists, settings.numSongs);
+      forceUpdate();
+    }, 1000);
   }, []);
 
+  const populateSongsArtists = (numArtists, numSongs) => {
+    const allArtists = JSON.parse(localStorage.getItem("apiResults")).artists;
+    const allSongs = JSON.parse(localStorage.getItem("apiResults")).songs;
+
+    // setAllSongs(allSongs)
+    // setAllArtists(allArtists)
+
+    console.log("ASLDKFJSDLKFJ ", allSongs);
+
+    if (artists.length > 0) setArtists([]);
+    if (songs.length > 0) setSongs([]);
+
+    console.log(allSongs.length, numSongs);
+    if (allSongs.length <= numSongs) {
+      setGameOver(true);
+      setShowModal(true);
+      return;
+    }
+
+    while (songs.length < numSongs) {
+      songs.push(allSongs.pop());
+    }
+    console.log("Starting songs ", songs);
+
+    for (let item of songs) {
+      artists.push(allArtists.find((e) => e.artistName === item.artistName));
+    }
+    console.log("starting Artists ", artists);
+    while (artists.length < numArtists) {
+      let tempArtist =
+        allArtists[Math.floor(Math.random() * allArtists.length)];
+      console.log("temp is ", tempArtist);
+      if (artists.artistName !== tempArtist.artistName)
+        artists.push(tempArtist);
+    }
+
+    console.log("Finsihed artist ", artists);
+    localStorage.setItem(
+      "apiResults",
+      JSON.stringify({
+        songs: allSongs,
+        artists: allArtists,
+      })
+    );
+
+    //shuffle both songs and artists arrays
+    setSongs(_.shuffle(songs));
+    setArtists(_.shuffle(artists));
+  };
+
   const handleSelectSong = (song) => {
+    console.log("Song is ", song, " matching is ", matches);
     setSelectedSong(song);
     if (selectedArtist !== false) {
       if (song.artistName !== selectedArtist.artistName) {
+        console.log("FAILLED", " matches is ", matches);
         setAttempts(attempts - 1);
         setSelectedSong(false);
         setSelectedArtist(false);
+
+        if (attempts - 1 === 0) {
+          setShowModal(true);
+          setIsPlaying(false);
+          setShowModal(true)
+          if (isPlaying)
+            currentAudio.pause();
+        }
       }
       if (song.artistName == selectedArtist.artistName) {
-        setAttempts(score + 10);
+        console.log("I'm Here and score is ", score);
+        setScore(score + 100);
         setSelectedSong(false);
         setSelectedArtist(false);
+        setMatches(matches + 1);
+
+
+        console.log("Song matches is ", matches, " +1 ", gameSettings.numSongs)
+        if ((matches + 1) == gameSettings.numSongs) {
+          console.log("Winner")
+          setIsPlaying(false);
+          if (isPlaying)
+            currentAudio.pause();
+          setWon(true)
+          setShowModal(true)
+
+        }
       }
     }
   };
+
   const handleSelectArtist = (artist) => {
+    console.log("Artist is ", artist);
     setSelectedArtist(artist);
+
     if (selectedSong !== false) {
       if (selectedSong.artistName !== artist.artistName) {
         setAttempts(attempts - 1);
         setSelectedSong(false);
         setSelectedArtist(false);
+
+        if (attempts - 1 === 0) {
+          setShowModal(true);
+          setIsPlaying(false);
+          if (isPlaying)
+            currentAudio.pause();
+          setShowModal(true)
+        }
       }
       if (selectedSong.artistName == artist.artistName) {
-        setScore(score + 10);
+        setScore(score + 100);
         setSelectedSong(false);
         setSelectedArtist(false);
+
+        setMatches(matches + 1);
+
+
+        setMatches(matches + 1)
+
+        console.log("Artist matches is ", matches + 1, " +1 ", gameSettings.numSongs, (matches + 1) == gameSettings.numSongs)
+        if ((matches + 1) == gameSettings.numSongs) {
+          console.log("Winner")
+          setIsPlaying(false);
+          if (isPlaying)
+            currentAudio.pause();
+          setWon(true)
+          setShowModal(true)
+
+        }
       }
     }
   };
-  function AudioButton({ url }) {
-    const [isPlaying, setIsPlaying] = useState(false);
-    const [audio, setAudio] = useState(null);
 
-    const playAudio = () => {
-      const newAudio = new Audio(url);
-      newAudio.play();
-      setIsPlaying(true);
-      setAudio(newAudio);
-    };
-
-    const pauseAudio = () => {
-      if (audio) {
-        audio.pause();
-        setIsPlaying(false);
+  const handlePlayPause = (song) => {
+    if (currentAudio !== null) {
+      if (!currentAudio.paused && currentAudio.src === song.previewURL) {
+        currentAudio.pause();
+        setIsPlaying(false); // pause current song if it's playing and the same song is clicked again
+        return;
+      } else {
+        currentAudio.pause();
+        setIsPlaying(false); // pause current song if a different song is clicked
       }
-    };
+    }
+    const audio = new Audio(song.previewURL);
+    setCurrentAudio(audio);
+    audio.play();
+    setIsPlaying(true);
+  };
 
-    return (
-      <div>
-        {isPlaying ? (
-          <button onClick={pauseAudio}>Pause Audio</button>
-        ) : (
-          <button onClick={playAudio}>Play Audio</button>
-        )}
-      </div>
-    );
+  function HeartRow({ attempts }) {
+    const maxHearts = 5;
+    const numHearts = Math.min(attempts, maxHearts);
+    const hearts = [];
+
+    for (let i = 0; i < numHearts; i++) {
+      hearts.push(<FavoriteIcon key={i} color="secondary" />);
+    }
+
+    return <div>{hearts}</div>;
   }
 
   return (
-    <div>
-      {console.log("gameSettings", gameSettings)}
-      {console.log("songs", songs)}
-      <h1>{gameSettings.selectedGenre} Music Game</h1>
-      <h2>Current Score: {score}</h2>
-      <p>Attempts: {attempts}</p>
-      <div>
-        <h2>Songs</h2>
-        <div>
-          {[...songs].slice(0, gameSettings.numSongs).map((song) => (
-            <div key={song.artistName}>
-              <button onClick={() => handleSelectSong(song)}>
-                <p>{song.trackName}</p>
-              </button>
-              <AudioButton url={song.previewURL} />
+    <Container
+      maxWidth="lg"
+      sx={{ height: "100%", padding: 0, overflow: "hidden" }}
+    >
+      <Button
+        sx={{ position: "fixed", top: 0, left: 0 }}
+        onClick={() => history.push('/')}
+      >Reset Game</Button>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          textAlign: "center",
+          marginTop: "5rem",
+          overflow: "hidden",
+        }}
+      >
+        <Typography variant="h2" gutterBottom>
+          {gameSettings.selectedGenre} Music Game
+        </Typography>
+        <Typography variant="h4" gutterBottom>
+          Current Score: {score}
+        </Typography>
+        <Typography variant="h5" gutterBottom>
+          Attempts: <HeartRow attempts={attempts} />
+        </Typography>
+        <Grid container spacing={2}>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="h4" gutterBottom>
+              Songs
+            </Typography>
+            <div>
+              {songs &&
+                [...songs].map((song) => (
+                  <div key={song.trackName}>
+                    <Button
+                      disabled={song == selectedSong}
+                      style={{ fontSize: "20px" }}
+                      onClick={() => handleSelectSong(song)}
+                    >
+                      <p>{song.trackName}</p>
+                    </Button>
+                    {isPlaying && currentAudio.src === song.previewURL ? (
+                      <Button
+                        onClick={() => {
+                          handlePlayPause(song);
+                        }}
+                      >
+                        <PauseIcon />
+                      </Button>
+                    ) : (
+                      <Button
+                        onClick={() => {
+                          handlePlayPause(song);
+                        }}
+                      >
+                        <PlayArrowIcon />
+                      </Button>
+                    )}
+                  </div>
+                ))}
             </div>
-          ))}
-        </div>
-        <h2>Artists</h2>
-        <div>
-          {[...artists].slice(0, gameSettings.numArtists).map((artist) => (
-            <div key={artist.artistName}>
-              <div>
-                <img src={artist.artistImg} alt={artist.artistName} />
-              </div>
-              <button onClick={() => handleSelectArtist(artist)}>
-                <p>{artist.artistName}</p>
-              </button>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <Typography variant="h4" gutterBottom>
+              Artists
+            </Typography>
+            <div>
+              {artists &&
+                _.chunk([...artists], 2).map((chunk, index) => (
+                  <Grid key={index} container spacing={2}>
+                    {chunk.map((artist) => (
+                      <Grid key={artist.artistName} item xs={12} sm={6}>
+                        <Button
+                          disabled={artist == selectedArtist}
+                          style={{ fontSize: "18px" }}
+                          onClick={() => handleSelectArtist(artist)}
+                        >
+                          <div>
+                            <img
+                              style={{ width: "150px", height: "150px" }}
+                              onClick={() => handleSelectArtist(artist)}
+                              src={artist.artistImg}
+                              alt={artist.artistName}
+                            />
+                            <p>{artist.artistName}</p>
+                          </div>
+                        </Button>
+                      </Grid>
+                    ))}
+                  </Grid>
+                ))}
             </div>
-          ))}
-        </div>
-      </div>
-    </div>
+          </Grid>
+        </Grid>
+        {showModal && (
+          < Modal
+            won={won}
+            attempts={attempts}
+            solution={solution}
+            score={score}
+            gameOver={gameOver}
+            onClose={() => {
+              setShowModal(false);
+              window.location.reload(false);
+            }}
+          />
+        )}
+      </Box>
+    </Container>
   );
 };
 
